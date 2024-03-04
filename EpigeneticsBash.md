@@ -160,11 +160,13 @@ while read filename; do
   wget -P regulatory_element/bigBed.files "https://www.encodeproject.org/files/$filename/@@download/$filename.bigBed"
 done
 ```
+
+```bash
 head regulatory_element/bigBed.H3K27ac.peaks.ids.txt
 
 ENCFF872UHN     sigmoid_colon   H3K27ac-human
 ENCFF977LBD     stomach H3K27ac-human
-
+```
 For H3K4me1
 
 ```bash
@@ -181,19 +183,42 @@ while read filename; do
   wget -P regulatory_element/bigBed.files "https://www.encodeproject.org/files/$filename/@@download/$filename.bigBed"
 done
 ```
+
+```bash
 head regulatory_element/bigBed.H3K4me1.peaks.ids.txt
 
 ENCFF724ZOF     sigmoid_colon   H3K4me1-human
 ENCFF844XRN     stomach H3K4me1-human
-
-
+```
+List of candidate distal regulatory elements for each tissue. How many are they? Answer below:
+```bash
+wc -l regulatory_element/bigBed.files/*.bigBed
    15883 regulatory_element/bigBed.files/ENCFF724ZOF.bigBed
    12362 regulatory_element/bigBed.files/ENCFF844XRN.bigBed
     8668 regulatory_element/bigBed.files/ENCFF872UHN.bigBed
     9162 regulatory_element/bigBed.files/ENCFF977LBD.bigBed
    46075 total
-   
+```   
+
 ATAC-seq peaks that intersect BOTH of the H3K27ac AND H3Kme1 
+
+First we convert bigBed to bed files
+```bash
+cd regulatory_element
+mkdir bed.files
+
+cut -f1 regulatory_element/bigBed.H3K4me1.peaks.ids.txt |\
+while read filename; do
+bigBedToBed regulatory_element/bigBed.files/"$filename".bigBed regulatory_element/bed.files/"$filename".bed
+done
+
+cut -f1 regulatory_element/bigBed.H3K27ac.peaks.ids.txt |\
+while read filename; do
+bigBedToBed regulatory_element/bigBed.files/"$filename".bigBed regulatory_element/bed.files/"$filename".bed
+done
+```
+
+Check M5 blah blah files names vs. encode
 
 
 ##Task 3: Focus on regulatory elements that are located on chromosome 1 (hint: to parse a file based on the value of a specific column, have a look at what we did here), and generate a file regulatory.elements.starts.tsv that contains the name of the regulatory region (i.e. the name of the original ATAC-seq peak) and the start (5') coordinate of the region.
