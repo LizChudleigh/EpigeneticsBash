@@ -295,10 +295,20 @@ done
 Filtered (This command removes duplicate entries based on the combination of chromosome, start position, and end position. It ensures that only unique peaks are retained. It also sets the output field separator (OFS) to a tab character.)
 ```bash
 for tissue in sigmoid_colon stomach; do
-  grep -w '^chr1' combined.peaks."$tissue".bed | sort -k 2,2 -k 3,3 | awk 'BEGIN{OFS="\t"} !seen[$1,$2,$3]++ {print $1, $2, $3, $4}' | awk '{print $4 "\t" $2}' | sort -u > regulatory.elements.starts_"$tissue"_filtered.tsv
+  grep -w 'chr1' combined.peaks."$tissue".bed | sort -k 2,2 -k 3,3 | awk 'BEGIN{OFS="\t"} !seen[$1,$2,$3]++ {print $1, $2, $3, $4}' | awk '{print $4 "\t" $2}' | sort -u > regulatory.elements.starts_"$tissue"_filtered.tsv
 done
 ```
 953 regulatory.elements.starts_sigmoid_colon_filtered.tsv
 649 regulatory.elements.starts_stomach_filtered.tsv
 
 ### Task 4: Focus on protein-coding genes located on chromosome 1. From the BED file of gene body coordinates that you generated here, prepare a tab-separated file called gene.starts.tsv which will store the name of the gene in the first column, and the start coordinate of the gene on the second column (REMEMBER: for genes located on the minus strand, the start coordinate will be at the 3'). Use the command below as a starting poi
+```bash
+awk 'BEGIN{FS=OFS="\t"}{if ($6=="+"){start=$2} else {start=$3}; print $4, start}'
+```
+
+```bash
+# from within /home/emchudleigh/epigenomics_uvic/ATAC-seq/annotation
+ grep -w 'chr1' /home/emchudleigh/epigenomics_uvic/ChIP-seq/annotation/gencode.v24.protein.coding.gene.body.bed| awk 'BEGIN{FS=OFS="\t"}{if ($6=="+"){start=$2} else {start=$3}; print $4, start}'> gene.starts.tsv 
+```
+
+### Task 5: Download or copy this python script inside the epigenomics_uvic/bin folder. Have a look at the help page of this script to understand how it works:
