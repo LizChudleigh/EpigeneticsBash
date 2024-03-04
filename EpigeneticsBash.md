@@ -52,7 +52,7 @@ ENCFF287UHP     sigmoid_colon
 ENCFF762IFP     stomach
 Can manually check against the annotation file sections in https://www.encodeproject.org/experiments/ENCSR851SBY/ and https://www.encodeproject.org/experiments/ENCSR086OGH/
 
-Here we expect no results if the values conincide
+Here we expect no results if the values coincide 
 ```bash
 for file_type in bigBed; do
   # retrieve original MD5 hash from the metadata
@@ -103,8 +103,6 @@ while read filename tissue; do
   bedtools intersect -b /home/emchudleigh/epigenomics_uvic/ChIP-seq/annotation/gencode.v24.protein.coding.gene.body.bed -a /home/emchudleigh/epigenomics_uvic/ATAC-seq/data/bed.files/"$filename".bed -v > /home/emchudleigh/epigenomics_uvic/ATAC-seq/analyses/peaks.analysis/genes.with.peaks."$tissue".ATACDistal.txt
 done
 ```
-
-####MAYBE WE DO THE FILTERED ONES HERE
 
 Here we get our 4 numbers for task 4 
 2 for each tissue type
@@ -218,8 +216,24 @@ bigBedToBed regulatory_element/bigBed.files/"$filename".bigBed regulatory_elemen
 done
 ```
 
-Check M5 blah blah files names vs. encode
+Here we expect no results if the values coincide 
+```bash
+for file_type in bigBed; do
 
+  ../bin/selectRows.sh <(cut -f1 analyses/*"$file_type".peaks.ids.txt) ../ChIP-seq/metadata.tsv | cut -f1,46 > data/"$file_type".files/md5sum.txt
+
+  cat data/"$file_type".files/md5sum.txt |\
+  while read filename original_md5sum; do 
+    md5sum data/"$file_type".files/"$filename"."$file_type" |\
+    awk -v filename="$filename" -v original_md5sum="$original_md5sum" 'BEGIN{FS=" "; OFS="\t"}{print filename, original_md5sum, $1}' 
+  done > tmp 
+  mv tmp data/"$file_type".files/md5sum.txt
+
+  awk '2!=3' data/"$file_type".files/md5sum.txt
+
+done
+```
+No results so the values of the MD5 from ENCODE and our md5sum are the same
 
 ##Task 3: Focus on regulatory elements that are located on chromosome 1 (hint: to parse a file based on the value of a specific column, have a look at what we did here), and generate a file regulatory.elements.starts.tsv that contains the name of the regulatory region (i.e. the name of the original ATAC-seq peak) and the start (5') coordinate of the region.
 
