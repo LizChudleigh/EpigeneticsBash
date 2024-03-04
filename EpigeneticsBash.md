@@ -3,7 +3,7 @@
 ## 4. EN‐TEx ATAC‐seq data: downstream analyses
 #4.1)Move to folder ATAC-seq, and create folders to store bigBed data files and peaks analyses files. Make sure the files are organized in a consistent way as done for ChIP-seq.
 
-To download the metadata file for ATAC-Seq for Sigmoid and Colon for ENCDO451RUA
+Starting Docker
 ```bash
 cd epigenomics_uvic
 sudo docker run -v $PWD:$PWD -w $PWD --rm -it dgarrimar/epigenomics_course
@@ -22,14 +22,14 @@ mkdri data/bed.files
 mkdir data/bed.files
 mkdir data/bigBed.files
 ```
-#4.2)Retrieve from a newly generated metadata file ATAC-seq peaks (bigBed narrow, pseudoreplicated peaks, assembly GRCh38) for stomach and sigmoid_colon for the same donor used in the previous sections. Hint: have a look at what we did here. Make sure your md5sum values coincide with the ones provided by ENCODE.
+#4.2)Retrieve from a newly generated metadata file ATAC-seq peaks (bigBed narrow, pseudoreplicated peaks, assembly GRCh38) for stomach and sigmoid_colon for the same donor used in the previous sections.  Make sure your md5sum values coincide with the ones provided by ENCODE.
 
-Calling the code download.metadata.sh from inside the bin folder
+Calling the code download.metadata.sh from inside the bin folder the metadata for ATAC-Seq for Sigmoid Colon and Stomach for ENCDO451RUA
 ```bash
 ../bin/download.metadata.sh "https://www.encodeproject.org/metadata/?replicates.library.biosample.donor.uuid=d370683e-81e7-473f-8475-7716d027849b&status=released&status=submitted&status=in+progress&assay_title=ATAC-seq&biosample_ontology.term_name=sigmoid+colon&biosample_ontology.term_name=stomach&type=Experiment"
 ```
 
-Getting the data on bigBed_narrowPeak and pseudoreplicated_peak data for humans in the GRCH38 assembly
+Getting the data on bigBed_narrowPeak and pseudoreplicated_peak data for humans in the GRCH38 assembly from the ATAC-Seq for Sigmoid Colon and Stomach for ENCDO451RUA
 ```bash
 grep -F "bigBed_narrowPeak" metadata.tsv |\
 grep -F "pseudoreplicated_peaks" |\
@@ -51,7 +51,7 @@ Results
 ENCFF287UHP     sigmoid_colon
 ENCFF762IFP     stomach
 
-Here we expect no results
+Here we expect no results if the values conincide
 ```bash
 for file_type in bigBed; do
   # retrieve original MD5 hash from the metadata
@@ -70,9 +70,8 @@ for file_type in bigBed; do
 
 done
 ```
-No results so the  values of the MD5 and our files are the same
+No results so the values of the MD5 from ENCODE and our md5sum are the same
 
-
-#4.3)For each tissue, run an intersection analysis using BEDTools: report 1) the number of peaks that intersect promoter regions, 2) the number of peaks that fall outside gene coordinates (whole gene body, not just the promoter regions). Hint: have a look at what we did here and here.
+#4.3)For each tissue, run an intersection analysis using BEDTools: report 1) the number of peaks that intersect promoter regions, 2) the number of peaks that fall outside gene coordinates (whole gene body, not just the promoter regions).
 
 
