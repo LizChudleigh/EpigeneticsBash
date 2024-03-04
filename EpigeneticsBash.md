@@ -312,3 +312,83 @@ awk 'BEGIN{FS=OFS="\t"}{if ($6=="+"){start=$2} else {start=$3}; print $4, start}
 ```
 
 ### Task 5: Download or copy this python script inside the epigenomics_uvic/bin folder. Have a look at the help page of this script to understand how it works:
+
+```bash
+python ../bin/get.distance.py -h
+```
+```bash
+#move to bin folder
+wget https://public-docs.crg.es/rguigo/Data/bborsari/UVIC/epigenomics_course/get.distance.py
+```
+Need to add the input and start 
+```bash
+python ../bin/get.distance.py -h
+Usage: get.distance.py [options]
+
+Options:
+  -h, --help            show this help message and exit
+  -i INPUT, --input=INPUT
+  -s START, --start=START
+```
+
+The code itself shows more with this Python script seeming to be designed to find the closest gene to a given enhancer start position within a certain maximum distance threshold (x).
+
+### This script takes as input two distinct arguments: 1) --input corresponds to the file gene.starts.tsv (i.e. the file you generated in Task #4); 2) --start corresponds to the 5' coordinate of a regulatory element. Complete the python script so that for a given coordinate --start the script returns the closest gene, the start of the gene and the distance of the regulatory element.
+
+Edit python script
+```bash
+# in epigenomics_uvic/bin
+nano get.distance.py
+```
+New Python Script
+```python
+#!/usr/bin/env python
+
+
+#************
+# LIBRARIES *
+#************
+
+import sys
+from optparse import OptionParser
+
+
+#*****************
+# OPTION PARSING *
+#*****************
+
+parser = OptionParser()
+parser.add_option("-i", "--input", dest="input")
+parser.add_option("-s", "--start", dest="start")
+options, args = parser.parse_args()
+
+open_input = open(options.input)
+enhancer_start = int(options.start)
+
+
+#********
+# BEGIN *
+#********
+
+x=1000000 # set maximum distance to 1 Mb
+selectedGene="" # initialize the gene as empty
+selectedGeneStart=0 # initialize the start coordinate of the gene as empty
+
+for line in open_input.readlines(): # for each line in the input file
+	gene, y = line.strip().split('\t') # split the line into two columns based on a tab 
+	position = int(y) # define a variable called position that correspond to the integer of the start of the gene
+	distance = abs(position - enhancer_start) # compute the absolute value of the difference between position and enhancer_start
+
+	if distance <x: # if this absolute value is lower than x
+		x = distance # this value will now be your current x
+		selectedGene = gene # save gene as selectedGene
+		selectedGeneStart = position # save position as selectedGeneStart
+print "\t".join([selectedGene, str(selectedGeneStart), str(x)])
+```
+### To make sure your script is working fine, run the following command:
+
+Test python script
+```bash
+root@f9044d112704:/home/emchudleigh/epigenomics_uvic/ATAC-seq/annotation# python /home/emchudleigh/epigenomics_uvic/bin/get.distance.py --input gene.starts.tsv --start 980000
+ENSG00000187642.9       982093  2093
+```
