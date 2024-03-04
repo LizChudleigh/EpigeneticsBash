@@ -1,7 +1,7 @@
 # Epigenetics Bash Assignment
 ## Elizabeth Chudleigh
 ## 4. EN‐TEx ATAC‐seq data: downstream analyses
-#4.1)Move to folder ATAC-seq, and create folders to store bigBed data files and peaks analyses files. Make sure the files are organized in a consistent way as done for ChIP-seq.
+### 4.1)Move to folder ATAC-seq, and create folders to store bigBed data files and peaks analyses files. Make sure the files are organized in a consistent way as done for ChIP-seq.
 
 Starting Docker
 ```bash
@@ -22,7 +22,7 @@ mkdri data/bed.files
 mkdir data/bed.files
 mkdir data/bigBed.files
 ```
-#4.2)Retrieve from a newly generated metadata file ATAC-seq peaks (bigBed narrow, pseudoreplicated peaks, assembly GRCh38) for stomach and sigmoid_colon for the same donor used in the previous sections.  Make sure your md5sum values coincide with the ones provided by ENCODE.
+### 4.2)Retrieve from a newly generated metadata file ATAC-seq peaks (bigBed narrow, pseudoreplicated peaks, assembly GRCh38) for stomach and sigmoid_colon for the same donor used in the previous sections.  Make sure your md5sum values coincide with the ones provided by ENCODE.
 
 Calling the code download.metadata.sh from inside the bin folder the metadata for ATAC-Seq for Sigmoid Colon and Stomach for ENCDO451RUA
 ```bash
@@ -73,7 +73,7 @@ done
 ```
 No results so the values of the MD5 from ENCODE and our md5sum are the same
 
-#4.3)For each tissue, run an intersection analysis using BEDTools: report 1) the number of peaks that intersect promoter regions, 2) the number of peaks that fall outside gene coordinates (whole gene body, not just the promoter regions).
+### 4.3)For each tissue, run an intersection analysis using BEDTools: report 1) the number of peaks that intersect promoter regions, 2) the number of peaks that fall outside gene coordinates (whole gene body, not just the promoter regions).
 
 Convert bigBed files with peaks for ATAC to regular bed files. This is our list of peaks for the two tissue types ENCFF762IFP for stomach and ENCFF287UHP for sigmoid colon
 ```bash
@@ -131,13 +131,13 @@ Gives us
 Study distal regulatory activity
 From section 4., you should have obtained a set of ATAC-seq peaks in stomach and sigmoid_colon that lie outside gene coordinates We will use these peaks as a starting point to build a catalogue of distal regulatory regions.
 
-##Task 1: Create a folder regulatory_elements inside epigenomics_uvic. This will be the folder where you store all your subsequent results.
+### Task 1: Create a folder regulatory_elements inside epigenomics_uvic. This will be the folder where you store all your subsequent results.
 In root@bf2c267898b8:/home/emchudleigh/epigenomics_uvic#
 ```bash
 mkdir regulatory_element
 install.dependecies.txt  nextflow  regulatory_element  test
 ```
-##Task 2: Distal regulatory regions are usually found to be flanked by both H3K27ac and H3K4me1. From your starting catalogue of open regions in each tissue, select those that overlap peaks of H3K27ac AND H3K4me1 in the corresponding tissue. You will get a list of candidate distal regulatory elements for each tissue. How many are they?
+### Task 2: Distal regulatory regions are usually found to be flanked by both H3K27ac and H3K4me1. From your starting catalogue of open regions in each tissue, select those that overlap peaks of H3K27ac AND H3K4me1 in the corresponding tissue. You will get a list of candidate distal regulatory elements for each tissue. How many are they?
 
 Here we use the metadata we already have from the ChIP-seq analysis to index and retrieve peaks for each marker.
 
@@ -188,7 +188,26 @@ head regulatory_element/bigBed.H3K4me1.peaks.ids.txt
 ENCFF724ZOF     sigmoid_colon   H3K4me1-human
 ENCFF844XRN     stomach H3K4me1-human
 ```
-List of candidate distal regulatory elements for each tissue. How many are they? Answer below:
+Here we expect no results if the values coincide 
+
+```bash
+for file_type in bigBed; do
+
+  ../bin/selectRows.sh <(cut -f1 analyses/*"$file_type".peaks.ids.txt) ../ChIP-seq/metadata.tsv | cut -f1,46 > data/"$file_type".files/md5sum.txt
+
+  cat data/"$file_type".files/md5sum.txt |\
+  while read filename original_md5sum; do 
+    md5sum data/"$file_type".files/"$filename"."$file_type" |\
+    awk -v filename="$filename" -v original_md5sum="$original_md5sum" 'BEGIN{FS=" "; OFS="\t"}{print filename, original_md5sum, $1}' 
+  done > tmp 
+  mv tmp data/"$file_type".files/md5sum.txt
+
+  awk '2!=3' data/"$file_type".files/md5sum.txt
+
+done
+```
+No results so the values of the MD5 from ENCODE and our md5sum are the same
+Count of peaks in each file
 ```bash
 wc -l regulatory_element/bigBed.files/*.bigBed
    15883 regulatory_element/bigBed.files/ENCFF724ZOF.bigBed
@@ -216,26 +235,9 @@ bigBedToBed regulatory_element/bigBed.files/"$filename".bigBed regulatory_elemen
 done
 ```
 
-Here we expect no results if the values coincide 
-```bash
-for file_type in bigBed; do
 
-  ../bin/selectRows.sh <(cut -f1 analyses/*"$file_type".peaks.ids.txt) ../ChIP-seq/metadata.tsv | cut -f1,46 > data/"$file_type".files/md5sum.txt
 
-  cat data/"$file_type".files/md5sum.txt |\
-  while read filename original_md5sum; do 
-    md5sum data/"$file_type".files/"$filename"."$file_type" |\
-    awk -v filename="$filename" -v original_md5sum="$original_md5sum" 'BEGIN{FS=" "; OFS="\t"}{print filename, original_md5sum, $1}' 
-  done > tmp 
-  mv tmp data/"$file_type".files/md5sum.txt
-
-  awk '2!=3' data/"$file_type".files/md5sum.txt
-
-done
-```
-No results so the values of the MD5 from ENCODE and our md5sum are the same
-
-##Task 3: Focus on regulatory elements that are located on chromosome 1 (hint: to parse a file based on the value of a specific column, have a look at what we did here), and generate a file regulatory.elements.starts.tsv that contains the name of the regulatory region (i.e. the name of the original ATAC-seq peak) and the start (5') coordinate of the region.
+### Task 3: Focus on regulatory elements that are located on chromosome 1 (hint: to parse a file based on the value of a specific column, have a look at what we did here), and generate a file regulatory.elements.starts.tsv that contains the name of the regulatory region (i.e. the name of the original ATAC-seq peak) and the start (5') coordinate of the region.
 
 
 
