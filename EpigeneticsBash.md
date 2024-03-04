@@ -50,6 +50,7 @@ head analyses/bigBed.peaks.ids.txt
 Results
 ENCFF287UHP     sigmoid_colon
 ENCFF762IFP     stomach
+Can manually check against the annotation file sections in https://www.encodeproject.org/experiments/ENCSR851SBY/ and https://www.encodeproject.org/experiments/ENCSR086OGH/
 
 Here we expect no results if the values conincide
 ```bash
@@ -73,5 +74,66 @@ done
 No results so the values of the MD5 from ENCODE and our md5sum are the same
 
 #4.3)For each tissue, run an intersection analysis using BEDTools: report 1) the number of peaks that intersect promoter regions, 2) the number of peaks that fall outside gene coordinates (whole gene body, not just the promoter regions).
+
+Convert bigBed files with peaks for ATAC to regular bed files. This is our list of peaks for the two tissue types ENCFF762IFP for stomach and ENCFF287UHP for sigmoid colon
+```bash
+cut -f1 analyses/bigBed.peaks.ids.txt |\
+ while read filename; do
+   bigBedToBed data/bigBed.files/"$filename".bigBed data/bed.files/"$filename".bed
+ done
+```
+
+Retrieve genes with peaks of ATAC at the promoter region – This is our list of TSS site: gencode.v24.protein.coding.non.redundant.TSS.bed
+
+For the overlap with TSS and ATAC-seq peaks 
+```bash
+cut -f-2 analyses/bigBed.peaks.ids.txt |\
+while read filename tissue; do 
+  bedtools intersect -b /home/emchudleigh/epigenomics_uvic/ChIP-seq/annotation/gencode.v24.protein.coding.non.redundant.TSS.bed -a /home/emchudleigh/epigenomics_uvic/ATAC-seq/data/bed.files/"$filename".bed -u > /home/emchudleigh/epigenomics_uvic/ATAC-seq/analyses/peaks.analysis/genes.with.peaks."$tissue".ATACTSS.txt
+done
+```
+
+Retrieve genes with peaks of ATAC at the promoter region – This is our list of gene bodies to NOT overlap: gencode.v24.protein.coding.gene.body.bed
+For ATAC-seq peaks that fall OUTSIDE of the genes (DISTAL)
+Unfiltered
+
+```bash
+cut -f-2 analyses/bigBed.peaks.ids.txt |\
+while read filename tissue; do 
+  bedtools intersect -b /home/emchudleigh/epigenomics_uvic/ChIP-seq/annotation/gencode.v24.protein.coding.gene.body.bed -a /home/emchudleigh/epigenomics_uvic/ATAC-seq/data/bed.files/"$filename".bed -v > /home/emchudleigh/epigenomics_uvic/ATAC-seq/analyses/peaks.analysis/genes.with.peaks."$tissue".ATACDistal.txt
+done
+```
+
+####MAYBE WE DO THE FILTERED ONES HERE
+
+Here we get our 4 numbers for task 4 
+2 for each tissue type
+2 files for each overlapp type, 1 for peaks that overlap with TSS (-u) (ATACTSS), 1  for peaks that do not #(-v) overlap with gene body (ATACDistal)
+```bash
+wc -l analyses/peaks.analysis/*
+```
+Gives us
+   37035 analyses/peaks.analysis/genes.with.peaks.sigmoid_colon.ATACDistal.txt
+   47871 analyses/peaks.analysis/genes.with.peaks.sigmoid_colon.ATACTSS.txt
+   34537 analyses/peaks.analysis/genes.with.peaks.stomach.ATACDistal.txt
+   44749 analyses/peaks.analysis/genes.with.peaks.stomach.ATACTSS.txt
+  164192 total
+
+1) the number of peaks that intersect promoter regions (Unfiltered)
+  37035 Sigmoid Colon
+  34537 Stomach
+  Total 71572
+
+2) the number of peaks that fall outside gene coordinates (whole gene body, not just the promoter regions) (Unfiltered)
+  47871 Sigmoid Colon
+  44749 Stomach
+  Total 92620
+
+# 5. Distal regulatory activity
+Study distal regulatory activity
+From section 4., you should have obtained a set of ATAC-seq peaks in stomach and sigmoid_colon that lie outside gene coordinates We will use these peaks as a starting point to build a catalogue of distal regulatory regions.
+
+
+
 
 
