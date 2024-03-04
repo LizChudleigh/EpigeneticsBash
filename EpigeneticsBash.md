@@ -89,7 +89,7 @@ For the overlap with TSS and ATAC-seq peaks
 ```bash
 cut -f-2 analyses/bigBed.peaks.ids.txt |\
 while read filename tissue; do 
-  bedtools intersect -b /home/emchudleigh/epigenomics_uvic/ChIP-seq/annotation/gencode.v24.protein.coding.non.redundant.TSS.bed -a /home/emchudleigh/epigenomics_uvic/ATAC-seq/data/bed.files/"$filename".bed -u > /home/emchudleigh/epigenomics_uvic/ATAC-seq/analyses/peaks.analysis/genes.with.peaks."$tissue".ATACTSS.txt
+  bedtools intersect -b /home/emchudleigh/epigenomics_uvic/ChIP-seq/annotation/gencode.v24.protein.coding.non.redundant.TSS.bed -a /home/emchudleigh/epigenomics_uvic/ATAC-seq/data/bed.files/"$filename".bed -u > /home/emchudleigh/epigenomics_uvic/ATAC-seq/analyses/peaks.analysis/genes.with.peaks."$tissue".ATACTSS.bed
 done
 ```
 
@@ -100,7 +100,7 @@ Unfiltered
 ```bash
 cut -f-2 analyses/bigBed.peaks.ids.txt |\
 while read filename tissue; do 
-  bedtools intersect -b /home/emchudleigh/epigenomics_uvic/ChIP-seq/annotation/gencode.v24.protein.coding.gene.body.bed -a /home/emchudleigh/epigenomics_uvic/ATAC-seq/data/bed.files/"$filename".bed -v > /home/emchudleigh/epigenomics_uvic/ATAC-seq/analyses/peaks.analysis/genes.with.peaks."$tissue".ATACDistal.txt
+  bedtools intersect -b /home/emchudleigh/epigenomics_uvic/ChIP-seq/annotation/gencode.v24.protein.coding.gene.body.bed -a /home/emchudleigh/epigenomics_uvic/ATAC-seq/data/bed.files/"$filename".bed -v > /home/emchudleigh/epigenomics_uvic/ATAC-seq/analyses/peaks.analysis/genes.with.peaks."$tissue".ATACDistal.bed
 done
 ```
 
@@ -207,19 +207,8 @@ for file_type in bigBed; do
 done
 ```
 No results so the values of the MD5 from ENCODE and our md5sum are the same
-Count of peaks in each file
-```bash
-wc -l regulatory_element/bigBed.files/*.bigBed
-   15883 regulatory_element/bigBed.files/ENCFF724ZOF.bigBed
-   12362 regulatory_element/bigBed.files/ENCFF844XRN.bigBed
-    8668 regulatory_element/bigBed.files/ENCFF872UHN.bigBed
-    9162 regulatory_element/bigBed.files/ENCFF977LBD.bigBed
-   46075 total
-```   
 
-ATAC-seq peaks that intersect BOTH of the H3K27ac AND H3Kme1 
-
-First we convert bigBed to bed files
+Converting the bigBed to bed files
 ```bash
 cd regulatory_element
 mkdir bed.files
@@ -234,12 +223,82 @@ while read filename; do
 bigBedToBed regulatory_element/bigBed.files/"$filename".bigBed regulatory_element/bed.files/"$filename".bed
 done
 ```
+For peaks which intersect promoter regions, we use the command bedtools intersect with our bed files as first argument, the protein coding non redundant TSS bed file as second argument (promoter region), we use parameter -u to look for unique peaks overlapping at least one TSS.
 
+ATAC-seq peaks that intersect BOTH of the H3K27ac AND H3Kme1 
 
+First we get a file where both peaks are present
+
+For Sigmoid Colon
+```bash
+#from within regulatroy_element/data/bed.files directory
+bedtools intersect -a ENCFF724ZOF.bed -b ENCFF872UHN.bed -u > /home/emchudleigh/epigenomics_uvic/ATAC-seq/analyses/peaks.analysis/H3Kme1_H3K27ac_overlap_sigmoid_colon.bed 
+```
+For Stomach 
+```bash
+#from within regulatroy_element/data/bed.files directory
+bedtools intersect -a ENCFF844XRN.bed -b ENCFF977LBD.bed -u > /home/emchudleigh/epigenomics_uvic/ATAC-seq/analyses/peaks.analysis/H3Kme1_H3K27ac_overlap_stomach.bed
+```
+```bash
+# quick check on row count in root@f9044d112704:/home/emchudleigh/epigenomics_uvic/ATAC-seq/analyses/peaks.analysis#
+wc -l *
+   53615 H3Kme1_H3K27ac_overlap_sigmoid_colon.bed
+   40992 H3Kme1_H3K27ac_overlap_stomach.bed
+   37035 genes.with.peaks.sigmoid_colon.ATACDistal.bed
+   47871 genes.with.peaks.sigmoid_colon.ATACTSS.bed
+   34537 genes.with.peaks.stomach.ATACDistal.bed
+   44749 genes.with.peaks.stomach.ATACTSS.bed
+  258799 total
+# To compare to the orginal bed files in regulatroy_element/data/bed.files directory
+   97950 ENCFF724ZOF.bed
+   68664 ENCFF844XRN.bed
+   56661 ENCFF872UHN.bed
+   57121 ENCFF977LBD.bed
+  280396 total
+```
+
+Now we intersect the distal genes from the ATAC-seq peak analysis for each tissue with its combined H3Kme1_H3K27ac_overlap file
+Sigmoid Colon
+```bash
+# from within /home/emchudleigh/epigenomics_uvic/ATAC-seq/analyses/peaks.analysis
+bedtools intersect -a genes.with.peaks.sigmoid_colon.ATACDistal.bed  -b H3Kme1_H3K27ac_overlap_sigmoid_colon.bed -u > combined.peaks.sigmoid_colon.bed
+```
+Stomach
+```bash
+# from within /home/emchudleigh/epigenomics_uvic/ATAC-seq/analyses/peaks.analysis
+bedtools intersect -a genes.with.peaks.stomach.ATACDistal.bed  -b H3Kme1_H3K27ac_overlap_stomach.bed -u > combined.peaks.stomach.bed
+```
+Attain counts of overlap unfiltered
+14333 combined.peaks.sigmoid_colon.bed
+8043 combined.peaks.stomach.bed
+
+Remove Repeated coordinates
+```bash
+for file in combined.peaks.sigmoid_colon.bed combined.peaks.stomach.bed; \
+  do sort -k 2,2 -k 3,3 "$file"| awk 'BEGIN{OFS="\t"} !seen[$1,$2,$3]++ {print $1, $2, $3, $4}' | sort -u | wc -l; done
+```
+8749 Filtered for Sigmoid Colon 
+5189 Filtered for Stomach
 
 ### Task 3: Focus on regulatory elements that are located on chromosome 1 (hint: to parse a file based on the value of a specific column, have a look at what we did here), and generate a file regulatory.elements.starts.tsv that contains the name of the regulatory region (i.e. the name of the original ATAC-seq peak) and the start (5') coordinate of the region.
 
+Creating the regulatory.elements.starts.tsv unfiltered
+```bash
+#still within /home/emchudleigh/epigenomics_uvic/ATAC-seq/analyses/peaks.analysis#
+for tissue in sigmoid_colon stomach; do
+  grep -w 'chr1' combined.peaks."$tissue".bed | sort -k1,1 -k2,2n | awk '{print $4 "\t" $2}' > regulatory.elements.starts_"$tissue".tsv 
+done
+```
+1537 regulatory.elements.starts_sigmoid_colon.tsv
+992 regulatory.elements.starts_stomach.tsv
 
+Filtered (This command removes duplicate entries based on the combination of chromosome, start position, and end position. It ensures that only unique peaks are retained. It also sets the output field separator (OFS) to a tab character.)
+```bash
+for tissue in sigmoid_colon stomach; do
+  grep -w '^chr1' combined.peaks."$tissue".bed | sort -k 2,2 -k 3,3 | awk 'BEGIN{OFS="\t"} !seen[$1,$2,$3]++ {print $1, $2, $3, $4}' | awk '{print $4 "\t" $2}' | sort -u > regulatory.elements.starts_"$tissue"_filtered.tsv
+done
+```
+953 regulatory.elements.starts_sigmoid_colon_filtered.tsv
+649 regulatory.elements.starts_stomach_filtered.tsv
 
-
-
+### Task 4: Focus on protein-coding genes located on chromosome 1. From the BED file of gene body coordinates that you generated here, prepare a tab-separated file called gene.starts.tsv which will store the name of the gene in the first column, and the start coordinate of the gene on the second column (REMEMBER: for genes located on the minus strand, the start coordinate will be at the 3'). Use the command below as a starting poi
