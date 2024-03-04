@@ -282,7 +282,13 @@ for file in combined.peaks.sigmoid_colon.bed combined.peaks.stomach.bed; \
 
 ### Task 3: Focus on regulatory elements that are located on chromosome 1 (hint: to parse a file based on the value of a specific column, have a look at what we did here), and generate a file regulatory.elements.starts.tsv that contains the name of the regulatory region (i.e. the name of the original ATAC-seq peak) and the start (5') coordinate of the region.
 
-Creating the regulatory.elements.starts.tsv unfiltered
+Single File
+```bash
+grep -w 'chr1' combined.peaks."$tissue".bed | sort -k1,1 -k2,2n | awk '{print $4 "\t" $2}' > regulatory.elements.starts.tsv 
+```
+992 regulatory.elements.starts.tsv
+
+Creating the regulatory.elements.starts.tsv unfiltered per tissue
 ```bash
 #still within /home/emchudleigh/epigenomics_uvic/ATAC-seq/analyses/peaks.analysis#
 for tissue in sigmoid_colon stomach; do
@@ -392,3 +398,23 @@ Test python script
 root@f9044d112704:/home/emchudleigh/epigenomics_uvic/ATAC-seq/annotation# python /home/emchudleigh/epigenomics_uvic/bin/get.distance.py --input gene.starts.tsv --start 980000
 ENSG00000187642.9       982093  2093
 ```
+### Task 6. For each regulatory element contained in the file regulatory.elements.starts.tsv, retrieve the closest gene and the distance to the closest gene using the python script you created above. Use the command below as a starting point:
+
+```bash
+cat regulatory.elements.starts.tsv | while read element start; do 
+   python ../bin/get.distance.py ... # to be completed by you; 
+done > regulatoryElements.genes.distances.tsv
+```
+```bash
+cd  /home/emchudleigh/epigenomics_uvic/ATAC-seq/analyses/peaks.analysis
+
+for tissue in sigmoid_colon stomach; do
+   cat regulatory.elements.starts_"$tissue".tsv | while read element start; do 
+      python /home/emchudleigh/epigenomics_uvic/bin/get.distance.py -i /home/emchudleigh/epigenomics_uvic/ATAC-seq/annotation/gene.starts.tsv --start "$start"
+   done >> regulatoryElements.genes.distances."$tissue".tsv
+done
+```
+
+
+### Task 7: Use R to compute the mean and the median of the distances stored in regulatoryElements.genes.distances.tsv
+
