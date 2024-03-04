@@ -133,6 +133,71 @@ Gives us
 Study distal regulatory activity
 From section 4., you should have obtained a set of ATAC-seq peaks in stomach and sigmoid_colon that lie outside gene coordinates We will use these peaks as a starting point to build a catalogue of distal regulatory regions.
 
+##Task 1: Create a folder regulatory_elements inside epigenomics_uvic. This will be the folder where you store all your subsequent results.
+In root@bf2c267898b8:/home/emchudleigh/epigenomics_uvic#
+```bash
+mkdir regulatory_element
+install.dependecies.txt  nextflow  regulatory_element  test
+```
+##Task 2: Distal regulatory regions are usually found to be flanked by both H3K27ac and H3K4me1. From your starting catalogue of open regions in each tissue, select those that overlap peaks of H3K27ac AND H3K4me1 in the corresponding tissue. You will get a list of candidate distal regulatory elements for each tissue. How many are they?
+
+Here we use the metadata we already have from the ChIP-seq analysis to index and retrieve peaks for each marker.
+
+For H3K27ac
+In root@bf2c267898b8:/home/emchudleigh/epigenomics_uvic#
+
+```bash
+grep -F H3K27ac ChIP-seq/metadata.tsv |\
+grep -F "bigBed_narrowPeak" |\
+grep -F "pseudoreplicated_peaks" |\
+grep -F "GRCh38" |\
+awk 'BEGIN{FS=OFS="\t"}{print $1, $11, $23}' |\
+sort -k2,2 -k1,1r |\
+sort -k2,2 -u > regulatory_element/bigBed.H3K27ac.peaks.ids.txt
+
+cut -f1 regulatory_element/bigBed.H3K27ac.peaks.ids.txt|\
+while read filename; do
+  wget -P regulatory_element/bigBed.files "https://www.encodeproject.org/files/$filename/@@download/$filename.bigBed"
+done
+```
+head regulatory_element/bigBed.H3K27ac.peaks.ids.txt
+
+ENCFF872UHN     sigmoid_colon   H3K27ac-human
+ENCFF977LBD     stomach H3K27ac-human
+
+For H3K4me1
+
+```bash
+grep -F H3K4me1 ChIP-seq/metadata.tsv |\
+grep -F "bigBed_narrowPeak" |\
+grep -F "pseudoreplicated_peaks" |\
+grep -F "GRCh38" |\
+awk 'BEGIN{FS=OFS="\t"}{print $1, $11, $23}' |\
+sort -k2,2 -k1,1r |\
+sort -k2,2 -u > regulatory_element/bigBed.H3K4me1.peaks.ids.txt
+
+cut -f1 regulatory_element/bigBed.H3K4me1.peaks.ids.txt |\
+while read filename; do
+  wget -P regulatory_element/bigBed.files "https://www.encodeproject.org/files/$filename/@@download/$filename.bigBed"
+done
+```
+head regulatory_element/bigBed.H3K4me1.peaks.ids.txt
+
+ENCFF724ZOF     sigmoid_colon   H3K4me1-human
+ENCFF844XRN     stomach H3K4me1-human
+
+
+   15883 regulatory_element/bigBed.files/ENCFF724ZOF.bigBed
+   12362 regulatory_element/bigBed.files/ENCFF844XRN.bigBed
+    8668 regulatory_element/bigBed.files/ENCFF872UHN.bigBed
+    9162 regulatory_element/bigBed.files/ENCFF977LBD.bigBed
+   46075 total
+   
+ATAC-seq peaks that intersect BOTH of the H3K27ac AND H3Kme1 
+
+
+##Task 3: Focus on regulatory elements that are located on chromosome 1 (hint: to parse a file based on the value of a specific column, have a look at what we did here), and generate a file regulatory.elements.starts.tsv that contains the name of the regulatory region (i.e. the name of the original ATAC-seq peak) and the start (5') coordinate of the region.
+
 
 
 
