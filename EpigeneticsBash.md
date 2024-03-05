@@ -433,11 +433,14 @@ This Rscript gives the mean and median of column 3 which is the distance calcula
 for tissue in sigmoid_colon stomach; do
   Rscript -e "x <- read.table('regulatoryElements.genes.distances."$tissue".tsv', header = FALSE, sep='\t'); cat('${tissue} Mean:', mean(x[,3]), '\n'); cat('${tissue} Median:', median(x[,3]), '\n')";
 done
-```
+
+#Output
 sigmoid_colon Mean: 72064.72
 sigmoid_colon Median: 35827
 stomach Mean: 45503.29
 stomach Median: 27735
+```
+
 
 
 
