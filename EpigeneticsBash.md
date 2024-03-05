@@ -416,5 +416,28 @@ done
 ```
 
 
+
 ### Task 7: Use R to compute the mean and the median of the distances stored in regulatoryElements.genes.distances.tsv
+
+First we filter the file for duplicates
+```bash
+for tissue in sigmoid_colon stomach; do
+    awk '!seen[$0]++' regulatoryElements.genes.distances."$tissue".tsv > filtered.regulatoryElements.genes.distances."$tissue".tsv
+done
+```
+
+Using Rscript -e which according to Rscript --help "Expressions (one or more '-e <expr>') may be used *instead* of 'file' from within R"
+This script first uses awk to remove duplicate lines from the file 
+This Rscript gives the mean and median of column 3 which is the distance calculated by the get.distance.py script
+```bash
+for tissue in sigmoid_colon stomach; do
+  Rscript -e "x <- read.table('regulatoryElements.genes.distances."$tissue".tsv', header = FALSE, sep='\t'); cat('${tissue} Mean:', mean(x[,3]), '\n'); cat('${tissue} Median:', median(x[,3]), '\n')";
+done
+```
+sigmoid_colon Mean: 72064.72
+sigmoid_colon Median: 35827
+stomach Mean: 45503.29
+stomach Median: 27735
+
+
 
